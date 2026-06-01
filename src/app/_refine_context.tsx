@@ -12,6 +12,14 @@ import { useNotificationProvider } from "@/components/refine-ui/notification/use
 import { ThemeProvider } from "@/components/refine-ui/theme/theme-provider";
 import { authProviderClient } from "@providers/auth-provider/auth-provider.client";
 import { dataProvider } from "@providers/data-provider";
+import { 
+  LayoutDashboard, 
+  Users, 
+  User, 
+  Building2, 
+  Gift, 
+  Map 
+} from "lucide-react";
 
 type RefineContextProps = {
   children: React.ReactNode;
@@ -30,29 +38,69 @@ export const RefineContext = ({ children }: RefineContextProps) => {
           routerProvider={routerProvider}
           resources={[
             {
-              name: "blog_posts",
-              list: "/blog-posts",
-              create: "/blog-posts/create",
-              edit: "/blog-posts/edit/:id",
-              show: "/blog-posts/show/:id",
+              name: "dashboard",
+              list: "/dashboard",
               meta: {
+                icon: <LayoutDashboard size={18} />,
+                label: "Dashboard",
+              }
+            },
+            {
+              name: "kepala-keluarga",
+              list: "/kepala-keluarga",
+              create: "/kepala-keluarga/create",
+              edit: "/kepala-keluarga/edit/:id",
+              show: "/kepala-keluarga/show/:id",
+              meta: {
+                icon: <Users size={18} />,
+                label: "Kepala Keluarga",
                 canDelete: true,
               },
             },
             {
-              name: "categories",
-              list: "/categories",
-              create: "/categories/create",
-              edit: "/categories/edit/:id",
-              show: "/categories/show/:id",
-              meta: {
-                canDelete: true,
+              name: "anggota-keluarga",
+              list: "/anggota-keluarga",
+              create: "/anggota-keluarga/create",
+              edit: "/anggota-keluarga/edit/:id",
+              meta: { 
+                icon: <User size={18} />,
+                label: "Anggota Keluarga", 
+                canDelete: true 
+              },
+            },
+            {
+              name: "fasilitas-publik",
+              list: "/fasilitas-publik",
+              create: "/fasilitas-publik/create",
+              edit: "/fasilitas-publik/edit/:id",
+              show: "/fasilitas-publik/show/:id",
+              meta: { 
+                icon: <Building2 size={18} />,
+                label: "Fasilitas Publik", 
+                canDelete: true 
+              },
+            },
+            {
+              name: "data-bantuan",
+              list: "/data-bantuan",
+              create: "/data-bantuan/create",
+              edit: "/data-bantuan/edit/:id",
+              show: "/data-bantuan/show/:id",
+              meta: { 
+                icon: <Gift size={18} />,
+                label: "Data Bantuan", 
+                canDelete: true 
               },
             },
           ]}
           options={{
             syncWithLocation: true,
             warnWhenUnsavedChanges: true,
+            // --- MENGGANTI LOGO DAN NAMA ---
+            title: {
+              text: "Sangket Desa",
+              icon: <Map className="text-primary" />,
+            },
           }}
         >
           {children}
