@@ -36,6 +36,7 @@ import {
   Save,
   Loader2,
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Dynamic import Leaflet (no SSR)
 const MapPicker = dynamic(() => import("@/components/map-picker"), {
@@ -63,10 +64,10 @@ const PENDIDIKAN = [
   "Strata III",
 ] as const;
 const STATUS_PERKAWINAN = [
-  "Belum Kawin",
-  "Kawin",
-  "Cerai Hidup",
-  "Cerai Mati",
+  { value: "Belum Kawin", label: "Belum Kawin" },
+  { value: "Kawin", label: "Kawin" },
+  { value: "Cerai Hidup", label: "Cerai Hidup" },
+  { value: "Cerai Mati", label: "Cerai Mati" },
 ] as const;
 const DUSUN = [
   "Dusun Kaja",
@@ -100,7 +101,7 @@ const kkSchema = z.object({
   agama: z.enum(AGAMA, { required_error: "Pilih agama" }),
   pendidikan: z.enum(PENDIDIKAN, { required_error: "Pilih pendidikan" }),
   pekerjaan: z.string().min(2, "Pekerjaan wajib diisi"),
-  status_perkawinan: z.enum(STATUS_PERKAWINAN, {
+  status_perkawinan: z.enum(["Belum Kawin", "Kawin", "Cerai Hidup", "Cerai Mati"],{
     required_error: "Pilih status perkawinan",
   }),
   alamat: z.string().min(5, "Alamat wajib diisi"),
@@ -110,6 +111,8 @@ const kkSchema = z.object({
   status_penduduk: z.enum(["Permanen", "Non-Permanen"], {
     required_error: "Pilih status penduduk",
   }),
+  alamat_asal: z.string().min(5, "Alamat asal wajib diisi"),
+  tanggal_mulai_tinggal: z.string().min(1, "Tanggal mulai tinggal wajib diisi"),
   bantuan: z.array(z.string()).optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
@@ -299,15 +302,21 @@ export default function CreateKepalaKeluargaPage() {
                   control={control}
                   name="jenis_kelamin"
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih jenis kelamin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="L">Laki-laki</SelectItem>
-                        <SelectItem value="P">Perempuan</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="L" id="laki-laki" />
+                        <Label htmlFor="laki-laki">Laki-laki</Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="P" id="perempuan" />
+                        <Label htmlFor="perempuan">Perempuan</Label>
+                      </div>
+                    </RadioGroup>
                   )}
                 />
                 <FieldError message={errors.jenis_kelamin?.message} />
@@ -341,7 +350,8 @@ export default function CreateKepalaKeluargaPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="pendidikan" className="mb-4 block">
-                  Pendidikan Terakhir <span className="text-destructive">*</span>
+                  Pendidikan Terakhir{" "}
+                  <span className="text-destructive">*</span>
                 </Label>
                 <Controller
                   control={control}
@@ -384,18 +394,21 @@ export default function CreateKepalaKeluargaPage() {
                 control={control}
                 name="status_perkawinan"
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="w-full sm:w-64">
-                      <SelectValue placeholder="Pilih status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_PERKAWINAN.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex gap-6"
+                  >
+                    {STATUS_PERKAWINAN.map((item) => (
+                      <div
+                        key={item.value}
+                        className="flex items-center space-x-2"
+                      >
+                        <RadioGroupItem value={item.value} id={item.value} />
+                        <Label htmlFor={item.value}>{item.label}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 )}
               />
               <FieldError message={errors.status_perkawinan?.message} />
@@ -510,35 +523,63 @@ export default function CreateKepalaKeluargaPage() {
               description="Apakah penduduk permanen atau non-permanen?"
             />
           </CardHeader>
-          <CardContent>
-            <Controller
-              control={control}
-              name="status_penduduk"
-              render={({ field }) => (
-                <div className="flex gap-4">
-                  {(["Permanen", "Non-Permanen"] as const).map((s) => (
-                    <label
-                      key={s}
-                      className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-md border text-sm transition-colors ${
-                        field.value === s
-                          ? "border-primary bg-primary/5 text-primary font-medium"
-                          : "border-border hover:bg-muted"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        className="sr-only"
-                        value={s}
-                        checked={field.value === s}
-                        onChange={() => field.onChange(s)}
-                      />
-                      {s}
-                    </label>
-                  ))}
-                </div>
-              )}
-            />
-            <FieldError message={errors.status_penduduk?.message} />
+          <CardContent className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="status_penduduk" className="mb-4 block">
+                Status Penduduk <span className="text-destructive">*</span>
+              </Label>
+              <Controller
+                control={control}
+                name="status_penduduk"
+                render={({ field }) => (
+                  <div className="flex gap-4">
+                    {(["Permanen", "Non-Permanen"] as const).map((s) => (
+                      <label
+                        key={s}
+                        className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-md border text-sm transition-colors ${
+                          field.value === s
+                            ? "border-primary bg-primary/5 text-primary font-medium"
+                            : "border-border hover:bg-muted"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          className="sr-only"
+                          value={s}
+                          checked={field.value === s}
+                          onChange={() => field.onChange(s)}
+                        />
+                        {s}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              />
+              <FieldError message={errors.status_penduduk?.message} />
+            </div>
+            <div>
+              <Label htmlFor="alamat_asal" className="mb-4 block">
+                Alamat Asal <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="alamat_asal"
+                placeholder="Nama jalan, nomor rumah, dll."
+                {...register("alamat_asal")}
+              />
+              <FieldError message={errors.alamat_asal?.message} />
+            </div>
+            <div>
+              <Label htmlFor="tanggal_mulai_tinggal" className="mb-4 block">
+                Tanggal Mulai Tinggal{" "}
+                <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="tanggal_mulai_tinggal"
+                type="date"
+                {...register("tanggal_mulai_tinggal")}
+              />
+              <FieldError message={errors.tanggal_mulai_tinggal?.message} />
+            </div>
           </CardContent>
         </Card>
 
@@ -574,7 +615,9 @@ export default function CreateKepalaKeluargaPage() {
                               field.onChange([...(field.value || []), item.id]);
                             } else {
                               field.onChange(
-                                (field.value || []).filter((v) => v !== item.id)
+                                (field.value || []).filter(
+                                  (v) => v !== item.id,
+                                ),
                               );
                             }
                           }}

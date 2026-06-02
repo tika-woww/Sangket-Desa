@@ -83,6 +83,8 @@ interface KepalaKeluarga {
   rw: string;
   dusun: string;
   status_penduduk: "Permanen" | "Non-Permanen";
+  tanggal_mulai_tinggal?: string;
+  alamat_asal?: string;
   bantuan: string[];
   latitude?: number;
   longitude?: number;
@@ -230,8 +232,10 @@ export default function ShowKepalaKeluargaPage() {
       rw: "02",
       dusun: "Dusun Kaja",
       status_penduduk: "Non-Permanen",
-      bantuan: ["pkh", "blt"], 
-      latitude: -8.1333, 
+      tanggal_mulai_tinggal: "2020-01-15",
+      alamat_asal: "Jl. Melati No. 5, Singaraja",
+      bantuan: ["pkh", "blt"],
+      latitude: -8.1333,
       longitude: 115.0833,
     },
     {
@@ -251,8 +255,10 @@ export default function ShowKepalaKeluargaPage() {
       rw: "01",
       dusun: "Dusun Tengah",
       status_penduduk: "Permanen",
+      tanggal_mulai_tinggal: "2020-01-15",
+      alamat_asal: "Jl. Melati No. 5, Singaraja",
       bantuan: ["bpnt"],
-    }
+    },
   ];
 
   // Data Dummy Anggota Keluarga
@@ -352,16 +358,16 @@ export default function ShowKepalaKeluargaPage() {
           </Button>
           <div>
             <p className="text-xs text-muted-foreground">Detail Data</p>
-            <h1 className="text-lg font-bold leading-tight">{kk.nama_lengkap}</h1>
+            <h1 className="text-lg font-bold leading-tight">
+              {kk.nama_lengkap}
+            </h1>
           </div>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() =>
-              router.push(`/kepala-keluarga/edit/${id}`)
-            }
+            onClick={() => router.push(`/kepala-keluarga/edit/${id}`)}
           >
             <Pencil className="mr-1.5 h-3.5 w-3.5" />
             Edit
@@ -396,10 +402,10 @@ export default function ShowKepalaKeluargaPage() {
                     kk.status_penduduk === "Permanen" ? "default" : "secondary"
                   }
                   className={
-                  kk.status_penduduk === "Permanen"
-                    ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                    : "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100"
-                }
+                    kk.status_penduduk === "Permanen"
+                      ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                      : "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100"
+                  }
                 >
                   {kk.status_penduduk}
                 </Badge>
@@ -425,9 +431,7 @@ export default function ShowKepalaKeluargaPage() {
               },
               {
                 label: "Anggota Keluarga",
-                value: anggotaLoading
-                  ? "…"
-                  : `${anggotaList.length} orang`,
+                value: anggotaLoading ? "…" : `${anggotaList.length} orang`,
                 icon: Users,
               },
             ].map(({ label, value, icon: Icon }) => (
@@ -481,11 +485,7 @@ export default function ShowKepalaKeluargaPage() {
               label="Pendidikan Terakhir"
               value={kk.pendidikan}
             />
-            <InfoItem
-              icon={Briefcase}
-              label="Pekerjaan"
-              value={kk.pekerjaan}
-            />
+            <InfoItem icon={Briefcase} label="Pekerjaan" value={kk.pekerjaan} />
           </CardContent>
         </Card>
 
@@ -540,6 +540,26 @@ export default function ShowKepalaKeluargaPage() {
         </Card>
       </div>
 
+      <div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Alamat Asal</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <InfoItem
+              icon={MapPin}
+              label="Alamat Asal"
+              value={kk.alamat_asal}
+            />
+            <InfoItem
+              icon={Calendar}
+              label="Tanggal Mulai Tinggal"
+              value={kk.tanggal_mulai_tinggal}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
       {/* ── Anggota Keluarga ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -553,9 +573,7 @@ export default function ShowKepalaKeluargaPage() {
           </div>
           <Button
             size="sm"
-            onClick={() =>
-              router.push(`/anggota-keluarga/create?kk_id=${id}`)
-            }
+            onClick={() => router.push(`/anggota-keluarga/create-kk?kk_id=${id}`)}
           >
             <UserPlus className="mr-1.5 h-3.5 w-3.5" />
             Tambah Anggota
@@ -634,7 +652,7 @@ export default function ShowKepalaKeluargaPage() {
                             className="h-7 w-7"
                             onClick={() =>
                               router.push(
-                                `/anggota-keluarga/edit/${anggota.id}?kk_id=${id}`
+                                `/anggota-keluarga/edit/${anggota.id}?kk_id=${id}`,
                               )
                             }
                           >
@@ -644,9 +662,7 @@ export default function ShowKepalaKeluargaPage() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-destructive hover:text-destructive"
-                            onClick={() =>
-                              setDeletingAnggotaId(anggota.id)
-                            }
+                            onClick={() => setDeletingAnggotaId(anggota.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>

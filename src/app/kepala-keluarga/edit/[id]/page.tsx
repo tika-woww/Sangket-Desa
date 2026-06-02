@@ -37,6 +37,8 @@ import {
   Loader2,
   Pencil,
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 
 const MapPicker = dynamic(() => import("@/components/map-picker"), {
   ssr: false,
@@ -63,10 +65,10 @@ const PENDIDIKAN = [
   "Strata III",
 ] as const;
 const STATUS_PERKAWINAN = [
-  "Belum Kawin",
-  "Kawin",
-  "Cerai Hidup",
-  "Cerai Mati",
+  { value: "Belum Kawin", label: "Belum Kawin" },
+  { value: "Kawin", label: "Kawin" },
+  { value: "Cerai Hidup", label: "Cerai Hidup" },
+  { value: "Cerai Mati", label: "Cerai Mati" },
 ] as const;
 const DUSUN = [
   "Dusun Kaja",
@@ -102,9 +104,12 @@ const kkSchema = z.object({
   agama: z.enum(AGAMA, { required_error: "Pilih agama" }),
   pendidikan: z.enum(PENDIDIKAN, { required_error: "Pilih pendidikan" }),
   pekerjaan: z.string().min(2, "Pekerjaan wajib diisi"),
-  status_perkawinan: z.enum(STATUS_PERKAWINAN, {
-    required_error: "Pilih status perkawinan",
-  }),
+  status_perkawinan: z.enum(
+    ["Belum Kawin", "Kawin", "Cerai Hidup", "Cerai Mati"],
+    {
+      required_error: "Pilih status perkawinan",
+    },
+  ),
   alamat: z.string().min(5, "Alamat wajib diisi"),
   rt: z.string().regex(/^\d+$/, "RT hanya angka").max(3),
   rw: z.string().regex(/^\d+$/, "RW hanya angka").max(3),
@@ -112,6 +117,8 @@ const kkSchema = z.object({
   status_penduduk: z.enum(["Permanen", "Non-Permanen"], {
     required_error: "Pilih status penduduk",
   }),
+  alamat_asal: z.string().min(5, "Alamat asal wajib diisi"),
+  tanggal_mulai_tinggal: z.string().min(1, "Tanggal mulai tinggal wajib diisi"),
   bantuan: z.array(z.string()).optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
@@ -262,7 +269,7 @@ export default function EditKepalaKeluargaPage() {
         <form onSubmit={onSubmit} className="space-y-6">
           {/* ── Identitas KK ── */}
           <Card>
-            <CardHeader >
+            <CardHeader>
               <SectionHeader
                 icon={FileText}
                 title="Identitas Kartu Keluarga"
@@ -299,7 +306,7 @@ export default function EditKepalaKeluargaPage() {
 
           {/* ── Data Pribadi ── */}
           <Card>
-            <CardHeader >
+            <CardHeader>
               <SectionHeader
                 icon={User}
                 title="Data Pribadi"
@@ -353,15 +360,21 @@ export default function EditKepalaKeluargaPage() {
                     control={control}
                     name="jenis_kelamin"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih jenis kelamin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="L">Laki-laki</SelectItem>
-                          <SelectItem value="P">Perempuan</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex gap-6"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="L" id="laki-laki" />
+                          <Label htmlFor="laki-laki">Laki-laki</Label>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="P" id="perempuan" />
+                          <Label htmlFor="perempuan">Perempuan</Label>
+                        </div>
+                      </RadioGroup>
                     )}
                   />
                   <FieldError message={errors.jenis_kelamin?.message} />
@@ -374,7 +387,10 @@ export default function EditKepalaKeluargaPage() {
                     control={control}
                     name="agama"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih agama" />
                         </SelectTrigger>
@@ -395,13 +411,17 @@ export default function EditKepalaKeluargaPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="pendidikan" className="mb-4 block">
-                    Pendidikan Terakhir <span className="text-destructive">*</span>
+                    Pendidikan Terakhir{" "}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Controller
                     control={control}
                     name="pendidikan"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih pendidikan" />
                         </SelectTrigger>
@@ -438,18 +458,21 @@ export default function EditKepalaKeluargaPage() {
                   control={control}
                   name="status_perkawinan"
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full sm:w-64">
-                        <SelectValue placeholder="Pilih status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STATUS_PERKAWINAN.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex gap-6"
+                    >
+                      {STATUS_PERKAWINAN.map((item) => (
+                        <div
+                          key={item.value}
+                          className="flex items-center space-x-2"
+                        >
+                          <RadioGroupItem value={item.value} id={item.value} />
+                          <Label htmlFor={item.value}>{item.label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
                   )}
                 />
                 <FieldError message={errors.status_perkawinan?.message} />
@@ -459,7 +482,7 @@ export default function EditKepalaKeluargaPage() {
 
           {/* ── Alamat ── */}
           <Card>
-            <CardHeader >
+            <CardHeader>
               <SectionHeader
                 icon={MapPin}
                 title="Alamat & Domisili"
@@ -512,7 +535,10 @@ export default function EditKepalaKeluargaPage() {
                     control={control}
                     name="dusun"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih dusun" />
                         </SelectTrigger>
@@ -557,14 +583,14 @@ export default function EditKepalaKeluargaPage() {
 
           {/* ── Status Penduduk ── */}
           <Card>
-            <CardHeader >
+            <CardHeader>
               <SectionHeader
                 icon={Heart}
                 title="Status Penduduk"
                 description="Apakah penduduk permanen atau non-permanen?"
               />
             </CardHeader>
-            <CardContent>
+            <CardContent className="grid grid-cols-1 gap-4">
               <Controller
                 control={control}
                 name="status_penduduk"
@@ -593,12 +619,35 @@ export default function EditKepalaKeluargaPage() {
                 )}
               />
               <FieldError message={errors.status_penduduk?.message} />
+              <div>
+                <Label htmlFor="alamat_asal" className="mb-4 block">
+                  Alamat Asal <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="alamat_asal"
+                  placeholder="Nama jalan, nomor rumah, dll."
+                  {...register("alamat_asal")}
+                />
+                <FieldError message={errors.alamat_asal?.message} />
+              </div>
+              <div>
+                <Label htmlFor="tanggal_mulai_tinggal" className="mb-4 block">
+                  Tanggal Mulai Tinggal{" "}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="tanggal_mulai_tinggal"
+                  type="date"
+                  {...register("tanggal_mulai_tinggal")}
+                />
+                <FieldError message={errors.tanggal_mulai_tinggal?.message} />
+              </div>
             </CardContent>
           </Card>
 
           {/* ── Bantuan ── */}
           <Card>
-            <CardHeader >
+            <CardHeader>
               <SectionHeader
                 icon={Gift}
                 title="Data Bantuan Sosial"
@@ -626,10 +675,15 @@ export default function EditKepalaKeluargaPage() {
                             checked={checked}
                             onCheckedChange={(c) => {
                               if (c) {
-                                field.onChange([...(field.value || []), item.id]);
+                                field.onChange([
+                                  ...(field.value || []),
+                                  item.id,
+                                ]);
                               } else {
                                 field.onChange(
-                                  (field.value || []).filter((v) => v !== item.id)
+                                  (field.value || []).filter(
+                                    (v) => v !== item.id,
+                                  ),
                                 );
                               }
                             }}
@@ -651,7 +705,7 @@ export default function EditKepalaKeluargaPage() {
             <p className="text-xs text-muted-foreground">
               {(queryData as any)?.updated_at
                 ? `Terakhir diperbarui: ${new Date(
-                    (queryData as any).updated_at
+                    (queryData as any).updated_at,
                   ).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "long",

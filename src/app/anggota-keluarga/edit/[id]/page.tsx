@@ -33,6 +33,7 @@ import {
   Home,
   Pencil,
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -52,10 +53,10 @@ const PENDIDIKAN = [
 ] as const;
 
 const STATUS_PERKAWINAN = [
-  "Belum Kawin",
-  "Kawin",
-  "Cerai Hidup",
-  "Cerai Mati",
+  { value: "Belum Kawin", label: "Belum Kawin" },
+  { value: "Kawin", label: "Kawin" },
+  { value: "Cerai Hidup", label: "Cerai Hidup" },
+  { value: "Cerai Mati", label: "Cerai Mati" },
 ] as const;
 
 const HUBUNGAN_KELUARGA = [
@@ -72,10 +73,15 @@ const HUBUNGAN_KELUARGA = [
   "Lainnya",
 ] as const;
 
+const NO_KK = [
+  { no_kk: "1234567890123456", nama_lengkap: "John Doe" },
+  { no_kk: "2345678901234567", nama_lengkap: "Jane Smith" },
+] as const;
+
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const anggotaSchema = z.object({
-  kk_id: z.union([z.string(), z.number()]),
+  kk_id: z.string().min(1, "Pilih Nomor KK"),
   nik: z
     .string()
     .length(16, "NIK harus 16 digit")
@@ -90,9 +96,12 @@ const anggotaSchema = z.object({
   agama: z.enum(AGAMA, { required_error: "Pilih agama" }),
   pendidikan: z.enum(PENDIDIKAN, { required_error: "Pilih pendidikan" }),
   pekerjaan: z.string().min(2, "Pekerjaan wajib diisi"),
-  status_perkawinan: z.enum(STATUS_PERKAWINAN, {
-    required_error: "Pilih status perkawinan",
-  }),
+  status_perkawinan: z.enum(
+    ["Belum Kawin", "Kawin", "Cerai Hidup", "Cerai Mati"],
+    {
+      required_error: "Pilih status perkawinan",
+    },
+  ),
 });
 
 type AnggotaFormValues = z.infer<typeof anggotaSchema>;
@@ -257,6 +266,33 @@ export default function EditAnggotaKeluargaPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
+                <Label className="mb-2">
+                  Nomor KK <span className="text-destructive">*</span>
+                </Label>
+
+                <Controller
+                  control={control}
+                  name="kk_id"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Nomor KK" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {NO_KK.map((kk) => (
+                          <SelectItem key={kk.no_kk} value={kk.no_kk}>
+                            {kk.no_kk} - {kk.nama_lengkap}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+
+                <FieldError message={errors.kk_id?.message} />
+              </div>
+              <div>
                 <Label htmlFor="hubungan_keluarga" className="mb-2 block">
                   Hubungan Keluarga <span className="text-destructive">*</span>
                 </Label>
@@ -344,22 +380,28 @@ export default function EditAnggotaKeluargaPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="jenis_kelamin" className="mb-2 block">
+                  <Label htmlFor="jenis_kelamin" className="mb-4 block">
                     Jenis Kelamin <span className="text-destructive">*</span>
                   </Label>
                   <Controller
                     control={control}
                     name="jenis_kelamin"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih jenis kelamin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="L">Laki-laki</SelectItem>
-                          <SelectItem value="P">Perempuan</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex gap-6"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="L" id="laki-laki" />
+                          <Label htmlFor="laki-laki">Laki-laki</Label>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="P" id="perempuan" />
+                          <Label htmlFor="perempuan">Perempuan</Label>
+                        </div>
+                      </RadioGroup>
                     )}
                   />
                   <FieldError message={errors.jenis_kelamin?.message} />
@@ -372,7 +414,10 @@ export default function EditAnggotaKeluargaPage() {
                     control={control}
                     name="agama"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih agama" />
                         </SelectTrigger>
@@ -389,90 +434,74 @@ export default function EditAnggotaKeluargaPage() {
                   <FieldError message={errors.agama?.message} />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* ── Pendidikan & Pekerjaan ── */}
-          <Card>
-            <CardHeader className="pb-3">
-              <SectionHeader
-                icon={GraduationCap}
-                title="Pendidikan & Pekerjaan"
-              />
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="pendidikan" className="mb-2 block">
+                    Pendidikan Terakhir{" "}
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="pendidikan"
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih pendidikan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PENDIDIKAN.map((p) => (
+                            <SelectItem key={p} value={p}>
+                              {p}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError message={errors.pendidikan?.message} />
+                </div>
+                <div>
+                  <Label htmlFor="pekerjaan" className="mb-2 block">
+                    Pekerjaan <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="pekerjaan"
+                    placeholder="Misal: Pelajar, Petani"
+                    {...register("pekerjaan")}
+                  />
+                  <FieldError message={errors.pekerjaan?.message} />
+                </div>
+              </div>
               <div>
-                <Label htmlFor="pendidikan" className="mb-2 block">
-                  Pendidikan Terakhir <span className="text-destructive">*</span>
+                <Label htmlFor="status_perkawinan" className="mb-4 block">
+                  Status Perkawinan <span className="text-destructive">*</span>
                 </Label>
                 <Controller
                   control={control}
-                  name="pendidikan"
+                  name="status_perkawinan"
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih pendidikan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PENDIDIKAN.map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex gap-6"
+                    >
+                      {STATUS_PERKAWINAN.map((item) => (
+                        <div
+                          key={item.value}
+                          className="flex items-center space-x-2"
+                        >
+                          <RadioGroupItem value={item.value} id={item.value} />
+                          <Label htmlFor={item.value}>{item.label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
                   )}
                 />
-                <FieldError message={errors.pendidikan?.message} />
+                <FieldError message={errors.status_perkawinan?.message} />
               </div>
-              <div>
-                <Label htmlFor="pekerjaan" className="mb-2 block">
-                  Pekerjaan <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="pekerjaan"
-                  placeholder="Misal: Pelajar, Petani"
-                  {...register("pekerjaan")}
-                />
-                <FieldError message={errors.pekerjaan?.message} />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ── Status Perkawinan ── */}
-          <Card>
-            <CardHeader className="pb-3">
-              <SectionHeader icon={Heart} title="Status Perkawinan" />
-            </CardHeader>
-            <CardContent>
-              <Controller
-                control={control}
-                name="status_perkawinan"
-                render={({ field }) => (
-                  <div className="flex flex-wrap gap-3">
-                    {STATUS_PERKAWINAN.map((s) => (
-                      <label
-                        key={s}
-                        className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-md border text-sm transition-colors ${
-                          field.value === s
-                            ? "border-primary bg-primary/5 text-primary font-medium"
-                            : "border-border hover:bg-muted"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          className="sr-only"
-                          value={s}
-                          checked={field.value === s}
-                          onChange={() => field.onChange(s)}
-                        />
-                        {s}
-                      </label>
-                    ))}
-                  </div>
-                )}
-              />
-              <FieldError message={errors.status_perkawinan?.message} />
             </CardContent>
           </Card>
 
@@ -482,7 +511,7 @@ export default function EditAnggotaKeluargaPage() {
             <p className="text-xs text-muted-foreground">
               {(queryData as any)?.updated_at
                 ? `Terakhir diperbarui: ${new Date(
-                    (queryData as any).updated_at
+                    (queryData as any).updated_at,
                   ).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "long",

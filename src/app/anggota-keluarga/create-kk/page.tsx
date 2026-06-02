@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Controller } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useOne, useList } from "@refinedev/core";
+import { useOne } from "@refinedev/core";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,16 +73,10 @@ const HUBUNGAN_KELUARGA = [
   "Lainnya",
 ] as const;
 
-const NO_KK = [
-  {no_kk: "1234567890123456", nama_lengkap: "John Doe"},
-  {no_kk: "2345678901234567", nama_lengkap: "Jane Smith"},
-] as const;
-
-
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const anggotaSchema = z.object({
-  kk_id: z.string().min(1, "Pilih Nomor KK"),
+  kk_id: z.union([z.string(), z.number()]),
   nik: z
     .string()
     .length(16, "NIK harus 16 digit")
@@ -145,7 +139,6 @@ export default function CreateAnggotaKeluargaPage() {
   const searchParams = useSearchParams();
   const kkId = searchParams.get("kk_id") ?? "";
 
-
   // Fetch info KK untuk ditampilkan di breadcrumb/header
   // Fetch info KK untuk ditampilkan di breadcrumb/header
   const { query } = useOne({
@@ -156,8 +149,8 @@ export default function CreateAnggotaKeluargaPage() {
   
   // Ekstrak data dari dalam objek query
   const kkNama = (query?.data?.data as any)?.nama_lengkap;
-  const kkNoKK = (query?.data?.data as any)?.no_kk;
-
+  const kkNoKK = (query?.data?.data as any)?.no_kk || "1234567890123456";
+  
   const {
     register,
     control,
@@ -173,19 +166,14 @@ export default function CreateAnggotaKeluargaPage() {
       redirect: false,
     },
     defaultValues: {
-      kk_id: kkId || "",
+      kk_id: kkId,
     },
   });
 
   const onSubmit = handleSubmit(async (data) => {
-    const finalKkId = kkId || data.kk_id;
-
-    await onFinish({
-      ...data,
-      kk_id: finalKkId,
-    });
-
-    router.push(`/kepala-keluarga/show/${finalKkId}`);
+    await onFinish({ ...data, kk_id: kkId });
+    // Redirect manual ke halaman show KK
+    router.push(`/kepala-keluarga/show/${kkId}`);
   });
 
   return (
@@ -235,30 +223,8 @@ export default function CreateAnggotaKeluargaPage() {
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="mb-2">
-                Nomor KK <span className="text-destructive">*</span>
-              </Label>
-
-              <Controller
-                control={control}
-                name="kk_id"
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Nomor KK" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {NO_KK.map((kk) => (
-                        <SelectItem key={kk.no_kk} value={kk.no_kk}>
-                          {kk.no_kk} - {kk.nama_lengkap}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError message={errors.kk_id?.message} />
+              <Label className="mb-2">Nomor KK</Label>
+              <Input value={kkNoKK ?? ""} disabled readOnly />
             </div>
             <div>
               <Label className="mb-2" htmlFor="hubungan_keluarga">
@@ -400,7 +366,6 @@ export default function CreateAnggotaKeluargaPage() {
                 <FieldError message={errors.agama?.message} />
               </div>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="mb-2" htmlFor="pendidikan">
